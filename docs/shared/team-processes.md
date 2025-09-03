@@ -1,52 +1,52 @@
-# Team Processes & Collaboration
+# Team Processes
 
-_Cross-functional process documentation for effective collaboration between chat modes and development workflows_
+_Essential collaboration patterns between chat modes_
 
-## Chat Mode Collaboration Workflows
+## Role Responsibilities
 
-### Strategic Planning Flow
+### Product Strategist (`docs/strategy/`)
 
-```
-Product Strategist → Product Manager → UX Designer
-        ↓                ↓              ↓
-    Vision & Goals → Requirements → User Experience
-        ↓                ↓              ↓
-    Documents:       Documents:     Documents:
-    - product-vision.md  - user-stories.md  - user-journeys.md
-    - strategic-roadmap.md - requirements.md - wireframes/
-    - market-analysis.md   - backlog.md      - user-research.md
-```
+- High-level product vision and market strategy
+- Competitive analysis and strategic roadmaps
+- Business objectives and success metrics
 
-### Technical Implementation Flow
+### Product Manager (`docs/product/`)
 
-```
-Architect → You (Developer) → QA Engineer → DevOps Engineer
-    ↓            ↓               ↓             ↓
-Technical    Implementation   Quality      Deployment
-Design       & Code          Assurance    & Operations
-    ↓            ↓               ↓             ↓
-Documents:   Code & Tests    Documents:   Documents:
-- system-design.md           - test-strategy.md  - deployment-guide.md
-- technical-decisions.md     - test-plans.md     - monitoring.md
-- api-specifications.md      - quality-metrics.md - infrastructure-as-code.md
-```
+- User stories and feature requirements
+- Product backlog and release planning
+- User research and validation
 
-## Document Handoff Patterns
+### Architect (`docs/architecture/`)
 
-### 1. Vision to Requirements (Product Strategist → Product Manager)
+- System design and technical architecture
+- Technology decisions and technical roadmaps
+- API specifications and integration patterns
 
-**Trigger**: New strategic initiative or market opportunity
-**Input Documents**:
+### UX Designer (`docs/design/`)
 
-- `strategy/product-vision.md`
-- `strategy/market-analysis.md`
-- `strategy/strategic-roadmap.md`
+- User research and experience design
+- Wireframes, prototypes, and design systems
+- User journey mapping and usability testing
 
-**Output Documents**:
+### QA Engineer (`docs/quality/`)
 
-- `product/requirements.md`
-- `product/user-stories.md`
-- `product/backlog.md`
+- Test strategy and quality standards
+- Test plans and execution
+- Quality metrics and reporting
+
+### DevOps Engineer (`docs/infrastructure/`)
+
+- Deployment and infrastructure management
+- Monitoring and observability
+- CI/CD pipelines and automation
+
+## Communication
+
+Use the inbox system for cross-role tasks and requests. Each role checks their `inbox.md` file and maintains their own working documents in their domain folder.
+
+## Documentation Standards
+
+All roles follow shared documentation standards for consistency and maintainability. Focus on actionable, current information that supports development work.
 
 **Process**:
 
@@ -142,129 +142,3 @@ Documents:   Code & Tests    Documents:   Documents:
 2. QA Engineer validates in staging environment
 3. All parties coordinate on release timeline
 4. Product Manager updates release notes
-
-## Meeting Cadences & Touchpoints
-
-### Weekly Cross-Functional Sync
-
-**Participants**: All chat modes + Developer
-**Duration**: 30 minutes
-**Agenda**:
-
-- Progress updates from each domain
-- Document review and alignment
-- Blockers and dependencies
-- Upcoming priorities
-
-**Documents Updated**:
-
-- `shared/meeting-notes.md`
-- Status updates in respective domain docs
-
-### Sprint Planning (Bi-weekly)
-
-**Participants**: Product Manager, UX Designer, Developer, QA Engineer
-**Duration**: 2 hours
-**Agenda**:
-
-- Review and refine user stories
-- Estimate effort and complexity
-- Plan sprint deliverables
-- Identify dependencies and risks
-
-**Documents Updated**:
-
-- `product/user-stories.md` (status updates)
-- `product/backlog.md` (sprint planning)
-
-### Architecture Review (Monthly)
-
-**Participants**: Architect, Product Strategist, DevOps Engineer, Developer
-**Duration**: 1 hour
-**Agenda**:
-
-- Review architectural decisions
-- Plan technical improvements
-- Assess technical debt
-- Align on technology strategy
-
-**Documents Updated**:
-
-- `architecture/technical-decisions.md`
-- `strategy/strategic-roadmap.md` (technical considerations)
-
-## Document Review Cycles
-
-### Daily Updates
-
-- **Owner**: Updates their primary documents with progress
-- **Time**: End of day
-- **Scope**: Status, blockers, decisions made
-
-### Weekly Reviews
-
-- **Cross-functional**: Review shared documents for alignment
-- **Time**: Start of week
-- **Scope**: Major changes, new requirements, strategy shifts
-
-### Sprint Reviews
-
-- **Complete review**: All active documents validated
-- **Time**: End of sprint
-- **Scope**: Deliverables, lessons learned, process improvements
-
-## Communication Standards
-
-### Document Updates
-
-- **Commit Message Format**: `docs(domain): brief description`
-  - Examples: `docs(product): add authentication user stories`
-  - Examples: `docs(architecture): update API specifications for auth`
-
-### Cross-References
-
-- **Always link** related documents using relative paths
-- **Update references** when documents change
-- **Include context** when referencing other domains
-
-### Change Notifications
-
-- **Major Changes**: Notify affected team members
-- **Breaking Changes**: Require cross-functional review
-- **New Documents**: Announce in team sync
-
-## Conflict Resolution
-
-### Document Conflicts
-
-1. **Identify**: Who are the stakeholders affected?
-2. **Discuss**: Schedule focused discussion with relevant parties
-3. **Decide**: Product Strategist makes final call on priority conflicts
-4. **Document**: Update `shared/decisions-log.md` with rationale
-
-### Process Improvements
-
-1. **Identify**: Process inefficiency or collaboration gap
-2. **Propose**: Suggest improvement in team sync
-3. **Trial**: Test new approach for one sprint
-4. **Adopt/Reject**: Decide based on results and update this document
-
-## Success Metrics
-
-### Documentation Health
-
-- **Freshness**: Documents updated within last week
-- **Completeness**: All major features have documentation
-- **Cross-References**: Links are valid and helpful
-
-### Collaboration Effectiveness
-
-- **Handoff Speed**: Time from document completion to next phase start
-- **Alignment**: Reduced rework due to miscommunication
-- **Visibility**: Team members can find information quickly
-
-### Process Efficiency
-
-- **Meeting Effectiveness**: Decisions made and documented
-- **Document Utility**: Documents referenced and useful
-- **Change Management**: Smooth process when requirements change
