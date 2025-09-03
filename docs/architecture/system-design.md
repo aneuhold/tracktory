@@ -533,7 +533,6 @@ graph TB
     subgraph "Monitoring"
         Metrics[Metrics Collection]
         Logs[Log Aggregation]
-        Alerts[Alert Manager]
     end
 
     subgraph "CI/CD"
@@ -556,7 +555,6 @@ graph TB
 
     API1 --> Metrics
     API2 --> Logs
-    Metrics --> Alerts
 
     Git --> Build
     Build --> Deploy
@@ -577,7 +575,6 @@ FROM alpine:latest AS runtime
 **Environment Management:**
 
 - **Development**: Local Docker Compose environment
-- **Staging**: Kubernetes cluster with production-like setup
 - **Production**: Managed Kubernetes with auto-scaling
 
 **CI/CD Pipeline:**
@@ -586,7 +583,6 @@ FROM alpine:latest AS runtime
 2. **Testing**: Unit tests, integration tests, security scans
 3. **Building**: Docker image creation and optimization
 4. **Deployment**: Blue-green deployment with health checks
-5. **Monitoring**: Automated rollback on performance degradation
 
 ---
 
@@ -602,36 +598,17 @@ graph TB
         Health[Health Checks]
     end
 
-    subgraph "Infrastructure Metrics"
-        Server[Server Metrics]
-        DB[Database Metrics]
-        Network[Network Metrics]
-    end
-
     subgraph "User Experience"
         RUM[Real User Monitoring]
         Performance[Performance Metrics]
         Errors[Error Tracking]
     end
 
-    subgraph "Alerting"
-        Prometheus[Prometheus]
-        Grafana[Grafana]
-        PagerDuty[PagerDuty]
-    end
-
     App --> Custom
     Custom --> Health
 
-    Server --> Prometheus
-    DB --> Prometheus
-    Network --> Prometheus
-
     RUM --> Performance
     Performance --> Errors
-
-    Prometheus --> Grafana
-    Grafana --> PagerDuty
 ```
 
 #### Key Metrics
@@ -649,13 +626,6 @@ graph TB
 - **Feature Usage**: Item creation, search usage, photo uploads
 - **Performance Budget**: Mobile performance score tracking
 - **Error Rates**: Application errors and user-reported issues
-
-**Infrastructure Metrics:**
-
-- **Resource Usage**: CPU, memory, disk utilization
-- **Network**: Bandwidth usage and latency
-- **Availability**: Service uptime and health checks
-- **Security**: Failed authentication attempts and suspicious activity
 
 ---
 
@@ -704,14 +674,10 @@ graph TB
 **Feature Flag Management:**
 
 - **Gradual Rollout**: New features behind feature flags
-- **A/B Testing**: Performance and usability testing
 - **Rollback Capability**: Instant feature disabling if needed
-- **User Segmentation**: Beta features for opt-in users
 
 **Scaling Considerations:**
 
-- **Database Sharding**: User-based partitioning strategy (future)
-- **Microservices**: Service decomposition plans (if needed)
 - **CDN Expansion**: Global content delivery optimization
 - **Caching Layers**: Additional caching tiers for scale
 
