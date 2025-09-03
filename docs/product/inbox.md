@@ -1,10 +1,6 @@
 # Product Inbox
 
-_Tasks and requests for the Product Manager_
-
-## Pending Tasks
-
-_No pending tasks_
+_No current pending tasks_
 
 ## Completed Tasks
 

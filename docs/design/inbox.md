@@ -1,10 +1,6 @@
 # Design Inbox
 
-_Tasks and requests for the UX Designer_
-
-## Pending Tasks
-
-_No pending tasks_
+_No current pending tasks_
 
 ## Completed Tasks
 

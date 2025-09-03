@@ -7,7 +7,6 @@ Each role maintains documents in their domain folder:
 **Product Strategist** (`docs/strategy/`)
 
 - `product-vision.md` - Overall product vision and goals
-- `market-analysis.md` - Market research and competitive analysis
 - `strategic-roadmap.md` - High-level timeline and milestones
 - `inbox.md` - Tasks from other roles
 - `notes.md` - Working notes and research

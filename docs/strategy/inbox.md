@@ -1,10 +1,6 @@
 # Strategy Inbox
 
-_Tasks and requests for the Product Strategist_
-
-## Pending Tasks
-
-_No pending tasks_
+_No current pending tasks_
 
 ## Completed Tasks
 

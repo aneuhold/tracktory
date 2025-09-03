@@ -1,10 +1,6 @@
 # Infrastructure Inbox
 
-_Tasks and requests for the DevOps Engineer_
-
-## Pending Tasks
-
-_No pending tasks_
+_No current pending tasks_
 
 ## Completed Tasks
 
