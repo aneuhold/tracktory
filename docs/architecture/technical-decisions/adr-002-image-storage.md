@@ -60,43 +60,7 @@ graph LR
 
 ## Implementation Details
 
-### Processing Pipeline
-
-```go
-type ImageProcessor struct {
-    storage     ObjectStorage
-    cdn         CDNProvider
-    resolutions []Resolution
-}
-
-type Resolution struct {
-    Name   string
-    Width  int
-    Height int
-    Quality int
-}
-
-func (p *ImageProcessor) ProcessUpload(image io.Reader) (*ProcessedImage, error) {
-    // 1. Validate image type and size
-    // 2. Generate multiple resolutions
-    // 3. Optimize formats (WebP/AVIF)
-    // 4. Upload to object storage
-    // 5. Update CDN cache
-    // 6. Return image metadata
-}
-```
-
-### Storage Structure
-
-```
-images/
-├── {user_id}/
-│   └── {item_id}/
-│       ├── {image_id}_original.jpg
-│       ├── {image_id}_thumb.webp
-│       ├── {image_id}_display.webp
-│       └── {image_id}_detail.webp
-```
+Detailed processing pipeline code, storage layout, validation limits, and CDN integration are defined in the [Image Processing Implementation Spec](../implementation-specs/image-processing.md). This ADR focuses on the decision and rationale; the spec is the source of truth for code-level details.
 
 ## Alternatives Considered
 

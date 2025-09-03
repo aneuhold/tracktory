@@ -16,60 +16,13 @@ See the [technical decision index for all ADRs](../technical-decisions.md)
 
 ### Search Vector Generation
 
-```sql
--- Trigger to update search vector on item changes
-CREATE OR REPLACE FUNCTION update_item_search_vector()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.search_vector :=
-        setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE(NEW.description, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(
-            (SELECT name FROM categories WHERE id = NEW.category_id), ''
-        )), 'C');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER item_search_vector_update
-    BEFORE INSERT OR UPDATE ON items
-    FOR EACH ROW EXECUTE FUNCTION update_item_search_vector();
-```
+See the [Search Implementation Spec](../implementation-specs/search.md) for SQL triggers and pg_trgm setup.
 
 ### Search API Implementation
 
 For REST endpoint contracts and payload schemas related to search (including filters and suggestions), see the [API specification](../implementation-specs/api-specification.md).
 
-```go
-type SearchService struct {
-    db *sql.DB
-}
-
-type SearchRequest struct {
-    Query      string             `json:"query"`
-    Categories []string           `json:"categories,omitempty"`
-    Locations  []string           `json:"locations,omitempty"`
-    Status     []string           `json:"status,omitempty"`
-    Limit      int                `json:"limit"`
-    Offset     int                `json:"offset"`
-}
-
-func (s *SearchService) SearchItems(userID string, req SearchRequest) (*SearchResponse, error) {
-    query := `
-        SELECT id, name, description, category_id, location_id,
-               ts_rank(search_vector, plainto_tsquery($2)) as rank
-        FROM items
-        WHERE user_id = $1
-          AND search_vector @@ plainto_tsquery($2)
-          AND ($3::text[] IS NULL OR category_id = ANY($3))
-          AND ($4::text[] IS NULL OR location_id = ANY($4))
-          AND ($5::text[] IS NULL OR status = ANY($5))
-        ORDER BY rank DESC, created_at DESC
-        LIMIT $6 OFFSET $7
-    `
-    // Execute query and return results
-}
-```
+The Go service skeleton is available in the [Search Implementation Spec](../implementation-specs/search.md).
 
 ## Search Features
 
@@ -92,19 +45,7 @@ func (s *SearchService) SearchItems(userID string, req SearchRequest) (*SearchRe
 
 ### Indexing Strategy
 
-```sql
--- Primary search index
-CREATE INDEX idx_items_search_vector ON items USING gin(search_vector);
-
--- Supporting indexes for filters
-CREATE INDEX idx_items_user_category ON items(user_id, category_id);
-CREATE INDEX idx_items_user_location ON items(user_id, location_id);
-CREATE INDEX idx_items_user_status ON items(user_id, status);
-
--- Composite index for common queries
-CREATE INDEX idx_items_user_search_created ON items(user_id, created_at DESC)
-    WHERE search_vector IS NOT NULL;
-```
+Index definitions live in the [Search Implementation Spec](../implementation-specs/search.md).
 
 ### Query Optimization
 

@@ -34,23 +34,6 @@ ADRs help us:
 | [ADR-005](./technical-decisions/adr-005-search-architecture.md) | Search Architecture and Performance | Accepted | 2025-09-03 | PostgreSQL full-text search with evolution path to Elasticsearch |
 | [ADR-006](./technical-decisions/adr-006-offline-support.md) | Offline Support and Data Sync | Accepted | 2025-09-03 | PWA with IndexedDB and conflict resolution strategies |
 
-## ADR Categories
-
-### **Core Technology Decisions**
-
-- [ADR-001: Technology Stack Selection](./technical-decisions/adr-001-technology-stack.md)
-- [ADR-004: Database Schema for Multi-Tenancy](./technical-decisions/adr-004-database-design.md)
-
-### **User Experience & Performance**
-
-- [ADR-002: Image Storage and Processing](./technical-decisions/adr-002-image-storage.md)
-- [ADR-005: Search Architecture and Performance](./technical-decisions/adr-005-search-architecture.md)
-- [ADR-006: Offline Support and Data Sync](./technical-decisions/adr-006-offline-support.md)
-
-### **Security & Authentication**
-
-- [ADR-003: Authentication and Session Management](./technical-decisions/adr-003-authentication.md)
-
 ## Decision Timeline
 
 ```mermaid
@@ -65,24 +48,6 @@ timeline
                : Search Architecture (ADR-005)
                : Offline Support (ADR-006)
 ```
-
-## Key Architectural Principles
-
-Based on our ADRs, these principles guide our technical decisions:
-
-1. **Mobile-First Performance**: All technology choices prioritize mobile device constraints and performance
-2. **Progressive Enhancement**: Features and architecture designed to evolve from simple to complex use cases
-3. **User Data Sovereignty**: Architecture enables complete user control over their data
-4. **Operational Simplicity**: Prefer proven technologies and simple operational patterns
-5. **Security by Design**: Security considerations integrated throughout the architecture
-
-## Future ADR Topics
-
-Areas we anticipate making decisions about:
-
-- **Real-time Collaboration**: WebSocket implementation for household features
-- **Microservices Evolution**: Service decomposition strategy as team grows
-- **Advanced Analytics**: User behavior tracking and performance insights
 
 ## ADR Template
 

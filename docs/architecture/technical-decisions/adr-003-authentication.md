@@ -54,208 +54,19 @@ See the [API specification](../implementation-specs/api-specification.md) for th
 
 ### Frontend (Next.js + Auth.js)
 
-```typescript
-// app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
-
-const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
-    }),
-  ],
-  callbacks: {
-    async signIn({ user, account, profile }) {
-      // Send user info to our Go API for user creation/update
-      const response = await fetch(
-        `${process.env.API_URL}/auth/oauth-callback`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            provider: account?.provider,
-            providerId: account?.providerAccountId,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        // Store our internal JWT for API calls
-        user.accessToken = data.access_token;
-        user.id = data.user.id;
-        return true;
-      }
-      return false;
-    },
-    async jwt({ token, user, account }) {
-      if (user) {
-        token.accessToken = user.accessToken;
-        token.userId = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.userId = token.userId;
-      return session;
-    },
-  },
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
-});
-
-export { handler as GET, handler as POST };
-```
+See the [Authentication Implementation Spec](../implementation-specs/authentication.md) for complete Auth.js setup and callbacks.
 
 ### Backend (Go) - OAuth Callback Handler
 
-```go
-type AuthService struct {
-    db  *sql.DB
-    jwt *JWTManager
-}
-
-type OAuthCallbackRequest struct {
-    Provider   string `json:"provider" validate:"required"`
-    ProviderID string `json:"providerId" validate:"required"`
-    Email      string `json:"email" validate:"required,email"`
-    Name       string `json:"name" validate:"required"`
-    Image      string `json:"image"`
-}
-
-type AuthResponse struct {
-    User        User   `json:"user"`
-    AccessToken string `json:"access_token"`
-    ExpiresIn   int    `json:"expires_in"`
-}
-
-func (s *AuthService) OAuthCallback(c *gin.Context) {
-    var req OAuthCallbackRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(400, gin.H{"error": "Invalid request"})
-        return
-    }
-
-    // Find or create user based on OAuth provider info
-    user, err := s.findOrCreateUserFromOAuth(req)
-    if err != nil {
-        c.JSON(500, gin.H{"error": "User creation failed"})
-        return
-    }
-
-    // Generate internal JWT for API access
-    accessToken, err := s.jwt.GenerateAccessToken(user.ID)
-    if err != nil {
-        c.JSON(500, gin.H{"error": "Token generation failed"})
-        return
-    }
-
-    c.JSON(200, AuthResponse{
-        User:        *user,
-        AccessToken: accessToken,
-        ExpiresIn:   3600, // 1 hour
-    })
-}
-
-func (s *AuthService) findOrCreateUserFromOAuth(req OAuthCallbackRequest) (*User, error) {
-    // Try to find existing user by OAuth provider info
-    user, err := s.findUserByOAuthProvider(req.Provider, req.ProviderID)
-    if err == nil {
-        // Update user info in case it changed
-        user.Email = req.Email
-        user.Name = req.Name
-        user.Image = req.Image
-        return s.updateUser(user)
-    }
-
-    // User doesn't exist, create new one
-    newUser := &User{
-        ID:           generateUUID(),
-        Email:        req.Email,
-        Name:         req.Name,
-        Image:        req.Image,
-        OAuthProvider: req.Provider,
-        OAuthProviderID: req.ProviderID,
-        CreatedAt:    time.Now(),
-        UpdatedAt:    time.Now(),
-    }
-
-    return s.createUser(newUser)
-}
-```
+See the [Authentication Implementation Spec](../implementation-specs/authentication.md) for the handler and middleware examples.
 
 ### User Database Schema
 
-```go
-type User struct {
-    ID              string    `json:"id" db:"id"`
-    Email           string    `json:"email" db:"email"`
-    Name            string    `json:"name" db:"name"`
-    Image           string    `json:"image" db:"image"`
-    OAuthProvider   string    `json:"oauth_provider" db:"oauth_provider"`
-    OAuthProviderID string    `json:"oauth_provider_id" db:"oauth_provider_id"`
-    CreatedAt       time.Time `json:"created_at" db:"created_at"`
-    UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
-}
-
-// Database migration for OAuth-only users table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    image TEXT,
-    oauth_provider VARCHAR(50) NOT NULL,
-    oauth_provider_id VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    UNIQUE(oauth_provider, oauth_provider_id),
-    UNIQUE(email)
-);
-
-CREATE INDEX idx_users_oauth ON users(oauth_provider, oauth_provider_id);
-CREATE INDEX idx_users_email ON users(email);
-```
+User table DDL and entity shape are defined in the [database schema spec](../implementation-specs/database-schema.md).
 
 ### JWT Validation Middleware
 
-```go
-func (s *AuthService) JWTMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        token := extractTokenFromHeader(c.GetHeader("Authorization"))
-        if token == "" {
-            c.JSON(401, gin.H{"error": "Missing authorization token"})
-            c.Abort()
-            return
-        }
-
-        claims, err := s.jwt.ValidateToken(token)
-        if err != nil {
-            c.JSON(401, gin.H{"error": "Invalid token"})
-            c.Abort()
-            return
-        }
-
-        // Set user context for downstream handlers
-        c.Set("user_id", claims.UserID)
-        c.Next()
-    }
-}
-```
+Middleware example lives in the [Authentication Implementation Spec](../implementation-specs/authentication.md).
 
 ## Rationale
 
@@ -283,13 +94,7 @@ func (s *AuthService) JWTMiddleware() gin.HandlerFunc {
 
 ### Custom JWT Claims
 
-```go
-type TracktoryJWTClaims struct {
-    UserID string `json:"user_id"`
-    Email  string `json:"email"`
-    jwt.RegisteredClaims
-}
-```
+See [Authentication Implementation Spec](../implementation-specs/authentication.md).
 
 ## Implementation Simplifications
 
@@ -349,17 +154,7 @@ type TracktoryJWTClaims struct {
 
 ### Required Environment Variables
 
-```bash
-# Next.js (Auth.js)
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-here
-API_URL=http://localhost:8080
-
-# Go Backend
-JWT_SECRET=shared-secret-with-nextjs
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=postgresql://user:pass@localhost:5432/tracktory
-```
+See [Authentication Implementation Spec](../implementation-specs/authentication.md) for environment variables.
 
 ### Security Considerations
 

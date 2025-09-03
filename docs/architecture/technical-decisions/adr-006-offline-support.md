@@ -61,20 +61,7 @@ Details for the offline data model, service worker caching, sync queue, and conf
 
 ### Resolution Approaches
 
-```typescript
-enum ConflictResolution {
-  LAST_WRITE_WINS = "last_write_wins",
-  USER_CHOICE = "user_choice",
-  MERGE_CHANGES = "merge_changes",
-}
-
-interface ConflictData {
-  clientVersion: any;
-  serverVersion: any;
-  conflictFields: string[];
-  resolution: ConflictResolution;
-}
-```
+Implementation enums, interfaces, and algorithms are defined in the [Offline Support Implementation Spec](../implementation-specs/offline-support.md).
 
 ## Rationale
 
