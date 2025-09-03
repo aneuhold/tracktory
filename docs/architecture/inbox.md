@@ -19,6 +19,5 @@ _Recently completed tasks will be listed here_
 
 **From**: [Role Name]
 **Priority**: High/Medium/Low
-**Due**: YYYY-MM-DD (if applicable)
 **Context**: Brief background and any relevant links
 ```

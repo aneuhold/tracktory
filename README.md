@@ -1,3 +1,9 @@
+# Tracktory
+
+An asset management tool, written with Next.js and Go.
+
+### Notes for AI Tooling
+
 Ideas for modes:
 
 - https://github.com/github/awesome-copilot/blob/main/chatmodes/prd.chatmode.md
