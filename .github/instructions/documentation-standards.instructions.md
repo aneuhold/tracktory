@@ -12,7 +12,8 @@
 - Include brief descriptions for external stakeholders
 - Keep documents focused and actionable
 - Update dates when making significant changes
-- Use emojis for quick visual cues on section headers (optional)
+- Use emojis for quick visual cues on section headers to make it easier to read
+- Use diagrams using Mermaid syntax when helpful
 
 ### Quality Criteria
 
