@@ -17,9 +17,9 @@
 ```mermaid
 sequenceDiagram
     participant User
-    participant NextJS[Next.js + Auth.js]
-    participant OAuth[OAuth Provider]
-    participant GoAPI[Go API]
+    participant NextJS as Next.js + Auth.js
+    participant OAuth as OAuth Provider
+    participant GoAPI as Go API
     participant Database
 
     User->>NextJS: Login Request
