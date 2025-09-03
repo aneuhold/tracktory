@@ -8,7 +8,7 @@ The Tracktory API is a RESTful service built with Go that provides secure, perfo
 
 ## Base Configuration
 
-**Base URL**: `https://api.tracktory.app`  
+**Base URL**: `https://tracktory.tonyneuhold.com`  
 **Version**: `v1`  
 **Content Type**: `application/json`  
 **Authentication**: JWT Bearer tokens

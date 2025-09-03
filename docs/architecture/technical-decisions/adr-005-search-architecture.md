@@ -1,7 +1,7 @@
 # ADR-005: Search Architecture and Performance
 
 **Date**: September 3, 2025  
-**Status**: Proposed  
+**Status**: Accepted  
 **Context**: Need fast, accurate search across user items with mobile-optimized performance.
 
 ## Decision
@@ -122,8 +122,7 @@ CREATE INDEX idx_items_user_search_created ON items(user_id, created_at DESC)
 
 - **Start Simple**: PostgreSQL meets initial requirements
 - **Monitor Performance**: Track search performance metrics
-- **Evaluate Scaling**: Consider Elasticsearch if needed
-- **Gradual Migration**: Can add Elasticsearch without replacing PostgreSQL
+- **Gradual Migration**: Can add Elasticsearch without replacing PostgreSQL if needed
 
 ## Alternatives Considered
 

@@ -1,7 +1,7 @@
 # ADR-006: Offline Support and Data Synchronization
 
 **Date**: September 3, 2025  
-**Status**: Proposed  
+**Status**: Accepted  
 **Context**: Need offline capability for asset tracking in environments with poor connectivity.
 
 ## Decision

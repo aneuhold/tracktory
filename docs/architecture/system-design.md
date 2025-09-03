@@ -42,7 +42,7 @@ graph TB
 
     subgraph "Application Layer"
         API[Go API Server]
-        Auth[Authentication Service]
+        AuthJS[Auth.js OAuth Handler]
         ImageProc[Image Processing]
     end
 
@@ -63,7 +63,7 @@ graph TB
     CDN --> Edge
     Edge --> LB
     LB --> API
-    API --> Auth
+    API --> AuthJS
     API --> DB
     API --> Cache
     API --> ImageProc
@@ -158,7 +158,8 @@ app/
 - **Code Splitting**: Route-based and component-based splitting
 - **Image Optimization**: Next.js Image component with custom loader
 - **Lazy Loading**: Progressive component loading with Suspense
-- **Service Worker**: Aggressive caching and offline functionality
+- **Service Worker**: Aggressive caching and offline functionality with sync queue
+- **Offline Support**: IndexedDB with conflict resolution and background sync
 
 ### Backend Architecture (Go API)
 
@@ -238,6 +239,8 @@ internal/
 
 ### Database Schema Design
 
+Note: This section presents a conceptual model. The authoritative, single-source schema (DDL, indexes, triggers, and RLS policies) lives in [database schema spec](./implementation-specs/database-schema.md). Update that file first; this diagram should be kept consistent with it.
+
 ```mermaid
 erDiagram
     Users ||--o{ Items : owns
@@ -247,79 +250,6 @@ erDiagram
     Items ||--o{ ItemHistory : tracks
     Categories ||--o{ Items : categorizes
     Locations ||--o{ Items : stores
-
-    Users {
-        uuid id PK
-        string email UK
-        string password_hash
-        string name
-        timestamp created_at
-        timestamp updated_at
-        jsonb preferences
-    }
-
-    Households {
-        uuid id PK
-        string name
-        uuid owner_id FK
-        timestamp created_at
-        timestamp updated_at
-        jsonb settings
-    }
-
-    Items {
-        uuid id PK
-        uuid user_id FK
-        uuid household_id FK
-        string name
-        text description
-        uuid category_id FK
-        uuid location_id FK
-        decimal purchase_price
-        date purchase_date
-        enum status
-        enum condition
-        timestamp created_at
-        timestamp updated_at
-        tsvector search_vector
-    }
-
-    Images {
-        uuid id PK
-        uuid item_id FK
-        string original_url
-        string optimized_url
-        string thumbnail_url
-        jsonb metadata
-        timestamp created_at
-    }
-
-    Categories {
-        uuid id PK
-        string name
-        string icon
-        uuid parent_id FK
-        int sort_order
-    }
-
-    Locations {
-        uuid id PK
-        uuid user_id FK
-        uuid household_id FK
-        string name
-        string description
-        uuid parent_id FK
-    }
-
-    ItemHistory {
-        uuid id PK
-        uuid item_id FK
-        uuid user_id FK
-        enum action
-        jsonb old_values
-        jsonb new_values
-        timestamp created_at
-    }
 ```
 
 #### Database Design Decisions
@@ -328,23 +258,10 @@ erDiagram
 
 - **UUID Primary Keys**: Distributed-friendly, privacy-focused identifiers
 - **JSONB Columns**: Flexible metadata storage for preferences and settings
-- **Full-Text Search**: tsvector for efficient item searching
+- **Full-Text Search**: tsvector with weighted ranking (A: name, B: description, C: category)
+- **Trigram Similarity**: pg_trgm for fuzzy matching and typo tolerance
 - **Partial Indexes**: Performance optimization for common queries
 - **Row Level Security**: Multi-tenant data isolation
-
-**Indexing Strategy:**
-
-```sql
--- Core performance indexes
-CREATE INDEX idx_items_user_id ON items(user_id);
-CREATE INDEX idx_items_household_id ON items(household_id);
-CREATE INDEX idx_items_search ON items USING gin(search_vector);
-CREATE INDEX idx_items_status ON items(status) WHERE status != 'active';
-
--- Composite indexes for common queries
-CREATE INDEX idx_items_user_created ON items(user_id, created_at DESC);
-CREATE INDEX idx_items_category_user ON items(category_id, user_id);
-```
 
 ### Image Storage Architecture
 
@@ -462,10 +379,12 @@ GET    /api/search/filters           # Available filters
 **Authentication API:**
 
 ```
-POST   /api/auth/register            # User registration
-POST   /api/auth/login               # User login
-POST   /api/auth/refresh             # Token refresh
-POST   /api/auth/logout              # User logout
+POST   /api/auth/oauth/google          # Google OAuth login
+POST   /api/auth/oauth/github          # GitHub OAuth login
+POST   /api/auth/oauth/callback        # OAuth callback processing
+POST   /api/auth/refresh               # Token refresh
+POST   /api/auth/logout                # User logout
+GET    /api/auth/user                  # Get current user info
 ```
 
 #### API Response Standards
@@ -636,10 +555,11 @@ graph TB
 
 **Authentication:**
 
-- **JWT Tokens**: Short-lived access tokens (15 minutes)
-- **Refresh Tokens**: Long-lived refresh tokens (7 days)
-- **Secure Storage**: HttpOnly cookies for web, secure storage for mobile
-- **Token Rotation**: Automatic token refresh and rotation
+- **OAuth Providers**: Google and GitHub authentication via Auth.js (NextAuth.js)
+- **JWT Tokens**: Short-lived access tokens (15 minutes) for API access
+- **Refresh Tokens**: Long-lived refresh tokens (7 days) with rotation
+- **Secure Storage**: Auth.js handles secure session storage
+- **No Passwords**: OAuth-only authentication, no password storage
 
 **Authorization:**
 

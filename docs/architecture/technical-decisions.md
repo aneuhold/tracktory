@@ -30,9 +30,9 @@ ADRs help us:
 | [ADR-001](./technical-decisions/adr-001-technology-stack.md) | Technology Stack Selection | Accepted | 2025-09-03 | Next.js + Go + PostgreSQL stack for mobile-first performance |
 | [ADR-002](./technical-decisions/adr-002-image-storage.md) | Image Storage and Processing | Accepted | 2025-09-03 | Object storage with CDN and multi-resolution processing |
 | [ADR-003](./technical-decisions/adr-003-authentication.md) | Authentication and Session Management | Accepted | 2025-09-03 | JWT with refresh tokens and Redis session management |
-| [ADR-004](./technical-decisions/adr-004-database-design.md) | Database Schema for Multi-Tenancy | Proposed | 2025-09-03 | Single database with row-level security for evolution to households |
-| [ADR-005](./technical-decisions/adr-005-search-architecture.md) | Search Architecture and Performance | Proposed | 2025-09-03 | PostgreSQL full-text search with evolution path to Elasticsearch |
-| [ADR-006](./technical-decisions/adr-006-offline-support.md) | Offline Support and Data Sync | Proposed | 2025-09-03 | PWA with IndexedDB and conflict resolution strategies |
+| [ADR-004](./technical-decisions/adr-004-database-design.md) | Database Schema for Multi-Tenancy | Accepted | 2025-09-03 | Single database with row-level security for evolution to households |
+| [ADR-005](./technical-decisions/adr-005-search-architecture.md) | Search Architecture and Performance | Accepted | 2025-09-03 | PostgreSQL full-text search with evolution path to Elasticsearch |
+| [ADR-006](./technical-decisions/adr-006-offline-support.md) | Offline Support and Data Sync | Accepted | 2025-09-03 | PWA with IndexedDB and conflict resolution strategies |
 
 ## ADR Categories
 

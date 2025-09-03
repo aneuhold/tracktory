@@ -1,7 +1,7 @@
 # ADR-004: Database Schema Design for Multi-Tenancy
 
 **Date**: September 3, 2025  
-**Status**: Proposed  
+**Status**: Accepted  
 **Context**: Design database schema that supports individual users initially but can evolve to household sharing.
 
 ## Decision
@@ -13,79 +13,11 @@
 
 ## Schema Design
 
-```sql
--- Core user table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    preferences JSONB DEFAULT '{}'::jsonb
-);
-
--- Household support (Phase 3)
-CREATE TABLE households (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    owner_id UUID NOT NULL REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    settings JSONB DEFAULT '{}'::jsonb
-);
-
--- User-household relationships
-CREATE TABLE household_members (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    household_id UUID NOT NULL REFERENCES households(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role VARCHAR(20) NOT NULL DEFAULT 'member', -- owner, admin, member, viewer
-    joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(household_id, user_id)
-);
-
--- Main items table with multi-tenancy support
-CREATE TABLE items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    household_id UUID REFERENCES households(id),
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    category_id UUID REFERENCES categories(id),
-    location_id UUID REFERENCES locations(id),
-    purchase_price DECIMAL(10,2),
-    purchase_date DATE,
-    status VARCHAR(20) DEFAULT 'active', -- active, sold, lost, donated
-    condition VARCHAR(20) DEFAULT 'excellent', -- excellent, good, fair, poor
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    search_vector tsvector
-);
-```
+Authoritative schema definition (DDL, indexes, triggers, and RLS policies) is maintained in the [database schema spec](../implementation-specs/database-schema.md). Use that as the source of truth.
 
 ## Row Level Security
 
-```sql
--- Enable RLS on items table
-ALTER TABLE items ENABLE ROW LEVEL SECURITY;
-
--- Policy for individual user access
-CREATE POLICY items_user_policy ON items
-    FOR ALL TO authenticated_users
-    USING (user_id = current_user_id());
-
--- Policy for household member access (Phase 3)
-CREATE POLICY items_household_policy ON items
-    FOR ALL TO authenticated_users
-    USING (
-        household_id IN (
-            SELECT household_id
-            FROM household_members
-            WHERE user_id = current_user_id()
-        )
-    );
-```
+See the [database schema spec](../implementation-specs/database-schema.md) for RLS policies and implementation details.
 
 ## Rationale
 
