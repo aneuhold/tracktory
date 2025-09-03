@@ -355,78 +355,11 @@ graph TB
     end
 ```
 
-#### Core API Endpoints
-
-**Items API:**
-
-```
-GET    /api/items                    # List user's items (paginated)
-POST   /api/items                    # Create new item
-GET    /api/items/{id}               # Get item details
-PUT    /api/items/{id}               # Update item
-DELETE /api/items/{id}               # Delete item
-POST   /api/items/{id}/images        # Upload item images
-```
-
-**Search API:**
-
-```
-GET    /api/search                   # Search items
-GET    /api/search/suggestions       # Search suggestions
-GET    /api/search/filters           # Available filters
-```
-
-**Authentication API:**
-
-```
-POST   /api/auth/oauth/google          # Google OAuth login
-POST   /api/auth/oauth/github          # GitHub OAuth login
-POST   /api/auth/oauth/callback        # OAuth callback processing
-POST   /api/auth/refresh               # Token refresh
-POST   /api/auth/logout                # User logout
-GET    /api/auth/user                  # Get current user info
-```
+For complete endpoint contracts, request/response bodies, and error codes, see the authoritative [API specification](./implementation-specs/api-specification.md).
 
 #### API Response Standards
 
-**Standard Response Format:**
-
-```json
-{
-  "success": true,
-  "data": { ... },
-  "meta": {
-    "timestamp": "2025-09-03T10:00:00Z",
-    "version": "1.0",
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 150,
-      "has_more": true
-    }
-  }
-}
-```
-
-**Error Response Format:**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid item data provided",
-    "details": {
-      "name": ["Name is required"],
-      "category": ["Invalid category ID"]
-    }
-  },
-  "meta": {
-    "timestamp": "2025-09-03T10:00:00Z",
-    "request_id": "req_123456789"
-  }
-}
-```
+Standard success and error formats are defined in the [API specification](./implementation-specs/api-specification.md).
 
 ---
 

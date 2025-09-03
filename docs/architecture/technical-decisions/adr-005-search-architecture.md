@@ -36,6 +36,8 @@ CREATE TRIGGER item_search_vector_update
 
 ### Search API Implementation
 
+For REST endpoint contracts and payload schemas related to search (including filters and suggestions), see the [API specification](../implementation-specs/api-specification.md).
+
 ```go
 type SearchService struct {
     db *sql.DB

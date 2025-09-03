@@ -48,6 +48,8 @@ sequenceDiagram
 
 ## Implementation Strategy
 
+See the [API specification](../implementation-specs/api-specification.md) for the exact auth-related endpoints, JWT structure expectations, and error formats. ADR-003 defines the decision and architecture; the spec defines the contracts.
+
 ### Frontend (Next.js + Auth.js)
 
 ```typescript
