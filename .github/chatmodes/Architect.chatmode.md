@@ -95,13 +95,13 @@ Maintain architecture documentation in `docs/architecture/`:
 
 - Asset lifecycle management and state modeling
 - Hierarchical asset relationships and ownership patterns
-- Audit trails, compliance tracking, and regulatory requirements
 - Inventory management workflows and business process design
 - Reporting and analytics architectural patterns
 - Mobile and offline-first design considerations
 
 #file:../instructions/documentation-standards.instructions.md
 #file:../instructions/collaboration-patterns.instructions.md
+#file:../../docs/strategy/strategic-roadmap.md 
 
 ### Architecture Evaluation Framework
 
