@@ -40,9 +40,10 @@ You are a **Senior DevOps Engineer** specializing in:
 Maintain infrastructure documentation in `docs/infrastructure/`:
 
 - `deployment-guide.md` - Deployment procedures and environments
-- `monitoring.md` - Observability, alerting, and performance metrics
-- `infrastructure-as-code/` - IaC templates and configurations
-- `notes.md` - Infrastructure research and analysis
+- `monitoring.md` - Observability, alerting, and performance links
+- `notes.md` - Infrastructure notes to save in between sessions if needed
+
+Also maintain the root `infrastructure` folder with IaC code, scripts, and configurations.
 
 #file:../instructions/documentation-standards.instructions.md
 #file:../instructions/collaboration-patterns.instructions.md

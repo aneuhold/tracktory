@@ -9,11 +9,11 @@
 ### Format Standards
 
 - Use standard Markdown formatting
-- Include brief descriptions for external stakeholders
+- Include brief descriptions for external stakeholders as well as backlinks to related docs where it applies
 - Keep documents focused and actionable
 - Update dates when making significant changes
 - Use emojis for quick visual cues on section headers to make it easier to read
-- Use diagrams using Mermaid syntax when helpful
+- Use diagrams using Mermaid syntax when helpful or it might communicate better visually
 
 ### Quality Criteria
 
@@ -21,3 +21,4 @@
 - **Actionable Content**: Information that can be acted upon
 - **Current Information**: Keep content up-to-date and relevant
 - **Accessible Language**: Written for team understanding
+- **Unique Content**: Avoid redundancy by linking to existing documents

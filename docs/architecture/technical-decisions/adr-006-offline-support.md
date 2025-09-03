@@ -1,3 +1,5 @@
+See the [technical decision index for all ADRs](../technical-decisions.md)
+
 # ADR-006: Offline Support and Data Synchronization
 
 **Date**: September 3, 2025  
@@ -47,87 +49,7 @@ graph TB
 
 ## Implementation
 
-### Offline Data Model
-
-```typescript
-interface OfflineAction {
-  id: string;
-  type: "CREATE" | "UPDATE" | "DELETE";
-  resource: "item" | "image" | "category";
-  data: any;
-  timestamp: number;
-  synced: boolean;
-  retryCount: number;
-}
-
-class OfflineManager {
-  private db: IDBDatabase;
-  private syncQueue: OfflineAction[] = [];
-
-  async addAction(
-    action: Omit<OfflineAction, "id" | "timestamp" | "synced" | "retryCount">
-  ) {
-    const offlineAction: OfflineAction = {
-      ...action,
-      id: generateId(),
-      timestamp: Date.now(),
-      synced: false,
-      retryCount: 0,
-    };
-
-    await this.storeAction(offlineAction);
-    this.syncQueue.push(offlineAction);
-
-    if (navigator.onLine) {
-      await this.processSyncQueue();
-    }
-  }
-
-  async processSyncQueue() {
-    for (const action of this.syncQueue) {
-      try {
-        await this.syncAction(action);
-        action.synced = true;
-      } catch (error) {
-        action.retryCount++;
-        if (action.retryCount > 3) {
-          // Handle failed sync
-        }
-      }
-    }
-  }
-}
-```
-
-### Service Worker Caching
-
-```javascript
-const CACHE_NAME = "tracktory-v1";
-const OFFLINE_URLS = [
-  "/",
-  "/dashboard",
-  "/add-item",
-  "/search",
-  "/offline.html",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_URLS))
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method === "GET") {
-    event.respondWith(
-      caches
-        .match(event.request)
-        .then((response) => response || fetch(event.request))
-        .catch(() => caches.match("/offline.html"))
-    );
-  }
-});
-```
+Details for the offline data model, service worker caching, sync queue, and conflict resolution are specified in the [Offline Support Implementation Spec](../implementation-specs/offline-support.md). This ADR focuses on the decision and rationale; the spec is the source of truth for code-level contracts and examples.
 
 ## Conflict Resolution Strategy
 

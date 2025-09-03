@@ -1,3 +1,5 @@
+See the [technical decision index for all ADRs](../technical-decisions.md)
+
 # ADR-002: Image Storage and Processing Architecture
 
 **Date**: September 3, 2025  

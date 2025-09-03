@@ -1,3 +1,5 @@
+See the [technical decision index for all ADRs](../technical-decisions.md)
+
 # ADR-003: Authentication and Session Management
 
 **Date**: September 3, 2025  

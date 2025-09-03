@@ -159,7 +159,7 @@ app/
 - **Image Optimization**: Next.js Image component with custom loader
 - **Lazy Loading**: Progressive component loading with Suspense
 - **Service Worker**: Aggressive caching and offline functionality with sync queue
-- **Offline Support**: IndexedDB with conflict resolution and background sync
+- **Offline Support**: IndexedDB with conflict resolution and background sync (see [Offline Support Spec](./implementation-specs/offline-support.md))
 
 ### Backend Architecture (Go API)
 

@@ -1,3 +1,5 @@
+See the [technical decision index for all ADRs](../technical-decisions.md)
+
 # ADR-004: Database Schema Design for Multi-Tenancy
 
 **Date**: September 3, 2025  

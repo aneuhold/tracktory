@@ -1,3 +1,5 @@
+See the [technical decision index for all ADRs](../technical-decisions.md)
+
 # ADR-005: Search Architecture and Performance
 
 **Date**: September 3, 2025  
