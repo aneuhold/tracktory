@@ -1,7 +1,7 @@
 # ADR-005: Search Architecture and Performance
 
 **Date**: September 3, 2025  
-**Status**: Accepted  
+**Status**: Proposed  
 **Context**: Need fast, accurate search across user items with mobile-optimized performance.
 
 ## Decision

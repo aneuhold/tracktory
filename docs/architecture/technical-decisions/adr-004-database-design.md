@@ -1,7 +1,7 @@
 # ADR-004: Database Schema Design for Multi-Tenancy
 
 **Date**: September 3, 2025  
-**Status**: Accepted  
+**Status**: Proposed  
 **Context**: Design database schema that supports individual users initially but can evolve to household sharing.
 
 ## Decision
