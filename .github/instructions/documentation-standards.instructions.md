@@ -12,6 +12,7 @@
 - Include brief descriptions for external stakeholders
 - Keep documents focused and actionable
 - Update dates when making significant changes
+- Use emojis for quick visual cues on section headers (optional)
 
 ### Quality Criteria
 
