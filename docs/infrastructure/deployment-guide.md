@@ -10,12 +10,57 @@ Prerequisites
 - Accounts: Vercel, Google Cloud, Neon, Upstash, Cloudflare
 - Domain access: Ability to change nameservers at Squarespace (registrar)
 
-Step 1 - Move DNS to Cloudflare
+Step 1 - Move DNS to Cloudflare (preserving existing Netlify sites)
 
-- In Cloudflare, Add a site and enter your domain
-- Cloudflare imports existing records; verify A and CNAME records
-- Change nameservers at Squarespace to the two Cloudflare nameservers
-- Wait for propagation (minutes to a few hours)
+**IMPORTANT**: This process preserves existing Netlify sites (like wiki.tonyneuhold.com) while transferring DNS management to Cloudflare.
+
+1a. Inventory current DNS records
+
+- Log into Netlify DNS settings and document all existing records:
+  - A records (apex domain pointing to Netlify)
+  - CNAME records (subdomains like wiki.tonyneuhold.com pointing to Netlify)
+  - MX records (email)
+  - TXT records (verification, SPF, DKIM)
+  - Any other custom records
+
+1b. Add domain to Cloudflare
+
+- In Cloudflare, "Add a site" and enter your domain (tonyneuhold.com)
+- Cloudflare automatically scans and imports most existing DNS records
+- **Critical**: Verify that ALL your Netlify records are imported correctly
+- If missing records, manually add them before changing nameservers
+
+1c. Configure Netlify sites for external DNS
+
+- In each Netlify site dashboard (tonyneuhold.com, wiki.tonyneuhold.com, etc.):
+  - Go to Site settings > Domain management
+  - Note the current custom domain and Netlify domain (\*.netlify.app)
+  - You'll need to point DNS records to these Netlify targets after the switch
+
+1d. Update DNS records in Cloudflare
+
+- For existing Netlify sites, ensure records point to correct Netlify targets:
+  - Apex domain (tonyneuhold.com): CNAME to your-site.netlify.app (or A records if using apex)
+  - Subdomains (wiki.tonyneuhold.com): CNAME to wiki-site.netlify.app
+- Set all existing site records to "DNS only" (gray cloud) initially for safety
+- Add placeholder records for new Tracktory services (will update targets later):
+  - api.tonyneuhold.com: CNAME to placeholder.example.com (update after Cloud Run setup)
+
+1e. Change nameservers at Squarespace
+
+- Replace current nameservers with the two Cloudflare nameservers
+- **Test immediately**: Check that existing sites (tonyneuhold.com, wiki.tonyneuhold.com) still load
+- Wait for full propagation (usually 2-24 hours)
+
+1f. Verify and troubleshoot
+
+- Use `dig` or online DNS tools to verify records resolve correctly:
+  ```bash
+  dig tonyneuhold.com
+  dig wiki.tonyneuhold.com
+  ```
+- If any existing site breaks, check the CNAME target in Cloudflare matches Netlify's expected target
+- Netlify sites should continue working normally with external DNS
 
 Step 2 - Provision core services
 
@@ -44,9 +89,16 @@ Step 5 - Wire environment secrets
 
 Step 6 - Custom domains
 
-- Frontend: Add your domain in Vercel. Vercel suggests DNS records. Create them in Cloudflare. Use proxied CNAME where supported
-- API: In Cloudflare, create CNAME api -> Cloud Run hostname. Start as DNS only (gray cloud) for simplicity; you can proxy later
+- Frontend: Add your Tracktory domain in Vercel (could be app.yourdomain.com or a separate domain). Vercel provides DNS targets. Create these records in Cloudflare. Use proxied CNAME where supported
+- API: In Cloudflare, create CNAME api.yourdomain.com -> Cloud Run hostname. Start as DNS only (gray cloud) for simplicity; you can proxy later
 - R2 assets (optional): Create a custom domain (cdn.yourdomain.com) to expose public images via R2. Start with private plus signed URLs if preferred
+- **Existing sites**: Your current Netlify sites (tonyneuhold.com, wiki.tonyneuhold.com) should continue working unchanged
+
+**DNS Management Best Practices**:
+
+- Keep existing Netlify sites on "DNS only" (gray cloud) until you're confident in the setup
+- Use subdomains for new services (api., app., cdn.) to avoid conflicts
+- Consider using a separate domain for Tracktory if you want to keep existing setup completely isolated
 
 Step 7 - CI/CD
 
@@ -74,3 +126,27 @@ Notes
 
 - Keep costs low by using free tiers and minimizing egress. R2 plus Cloudflare CDN reduces egress for images
 - If cold starts are noticeable, consider Cloud Run min instances = 1 (small cost) or add Cloudflare cache rules
+- **Netlify sites**: Continue to work normally with Cloudflare DNS. You can gradually enable Cloudflare proxy features (orange cloud) for performance benefits, but test carefully
+- **Rollback plan**: If issues arise, you can quickly change nameservers back to Netlify DNS, though propagation takes time
+
+## DNS Migration Troubleshooting
+
+Common issues and solutions:
+
+**Existing Netlify site not loading**:
+
+- Check CNAME target in Cloudflare matches the \*.netlify.app domain for that site
+- Ensure record is set to "DNS only" (gray cloud) initially
+- Use `dig yourdomain.com` to verify DNS resolution
+
+**Netlify says "DNS zone not managed by Netlify"**:
+
+- This is expected after moving to external DNS
+- Netlify sites will still work; you just manage DNS elsewhere
+- Custom domains in Netlify should show the target domain to point your DNS to
+
+**Gradual migration approach**:
+
+- Move just the apex domain first, keep subdomains on Netlify DNS temporarily
+- Use Cloudflare's partial setup if you want to manage only some records initially
+- Test thoroughly before moving production subdomains
