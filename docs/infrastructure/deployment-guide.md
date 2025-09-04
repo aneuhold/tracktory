@@ -1,6 +1,6 @@
 # Deployment Guide (Prod)
 
-Last Updated: 2025-09-03
+Last Updated: 2025-09-04
 
 Goal: Bring up a production MVP using Vercel (frontend), Cloud Run (API), Neon (Postgres), Upstash (Redis), and Cloudflare (DNS and R2). Keep it simple and low cost.
 
@@ -71,7 +71,11 @@ Step 2 - Provision core services
 Step 3 - Frontend on Vercel
 
 - Import the GitHub repo into Vercel and select the Next.js app
-- Set environment variables (NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_IMAGE_BASE)
+- Set environment variables:
+  - NEXT_PUBLIC_API_BASE_URL
+  - NEXT_PUBLIC_IMAGE_BASE
+  - NEXTAUTH_URL (Vercel-provided URL or custom domain)
+  - NEXTAUTH_SECRET (used to sign Auth.js JWTs; must match API JWT secret when using HS256)
 - First deploy creates a Vercel URL; map custom domain after DNS cutover
 
 Step 4 - API on Cloud Run
@@ -80,18 +84,27 @@ Step 4 - API on Cloud Run
 - Create a Cloud Run service (region us-west1 recommended). Allow unauthenticated if this is a public API
 - Capture the service URL (for example, https://api-xxxxx-uw.a.run.app)
 - Optionally map custom domain (api.yourdomain.com) in Cloud Run, or create a CNAME in Cloudflare to the run.app hostname (DNS only to start)
+- Configure CORS and auth on the API:
+  - Allowed origins: https://tracktory.tonyneuhold.com and http://localhost:3000 (dev)
+  - Allowed methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+  - Allowed headers: Authorization, Content-Type
+  - Credentials: false (use Authorization: Bearer <token>)
+  - Verification: Validate Auth.js JWTs using HS256 shared secret for MVP
 
 Step 5 - Wire environment secrets
 
-- GitHub repo or environments: DATABASE_URL (Neon), REDIS_URL or UPSTASH_REST_URL and UPSTASH_REST_TOKEN, R2 credentials, JWT secret
-- Vercel project env vars: NEXT_PUBLIC_API_BASE_URL and any client needed values (do not put secrets in NEXT_PUBLIC unless intended)
-- Cloud Run service: set container env vars for DB, Redis, R2, and JWT secret
+- GitHub repo or environments: DATABASE_URL (Neon), REDIS_URL or UPSTASH_REST_URL and UPSTASH_REST_TOKEN, R2 credentials, JWT secret, optional ALLOWED_ORIGINS
+  - Name JWT secret consistently (for example, JWT_SECRET) and set Vercel NEXTAUTH_SECRET = JWT_SECRET for HS256
+- Vercel project env vars: NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_IMAGE_BASE, NEXTAUTH_URL, NEXTAUTH_SECRET (do not put secrets in NEXT_PUBLIC unless intended)
+- Cloud Run service: set container env vars for DB, Redis, R2, JWT_SECRET (matching NEXTAUTH_SECRET for HS256), and CORS (for example, ALLOWED_ORIGINS)
 
 Step 6 - Custom domains
 
 - Frontend: Add your Tracktory domain in Vercel (could be app.yourdomain.com or a separate domain). Vercel provides DNS targets. Create these records in Cloudflare. Use proxied CNAME where supported
 - API: In Cloudflare, create CNAME api.yourdomain.com -> Cloud Run hostname. Start as DNS only (gray cloud) for simplicity; you can proxy later
-- R2 assets (optional): Create a custom domain (cdn.yourdomain.com) to expose public images via R2. Start with private plus signed URLs if preferred
+- R2 assets (optional): Create a custom domain (cdn.yourdomain.com) to expose public images via R2.
+  - Access policy: make derived paths (thumbnails/display/detail) public-read; keep originals/ private
+  - Serve derived via CDN; issue time-limited signed URLs from the API when users download originals
 - **Existing sites**: Your current Netlify sites (tonyneuhold.com, wiki.tonyneuhold.com) should continue working unchanged
 
 **DNS Management Best Practices**:
@@ -103,13 +116,16 @@ Step 6 - Custom domains
 Step 7 - CI/CD
 
 - Vercel: Auto-deploy on push to main
-- GitHub Actions: Add a workflow to build and test backend and deploy to Cloud Run on main. Use repo or environment secrets for GCP auth. Start with a JSON key for a service account; later move to OIDC or Workload Identity Federation
+- GitHub Actions: Add a workflow to build and test backend and deploy to Cloud Run on main. Use repo or environment secrets for GCP auth.
+  - Store GCP service account credentials as a secret (for example, GCP_SA_KEY) for MVP; consider OIDC/WIF later
+  - Store DATABASE_URL, JWT_SECRET (matches NEXTAUTH_SECRET), R2 credentials, and any ALLOWED_ORIGINS in environment or repo secrets
 
 Step 8 - Smoke test
 
 - Visit https://yourdomain.com and basic app routes
 - Call https://api.yourdomain.com/health
 - Upload a small image; verify it lands in R2 and is retrievable via CDN or signed URL
+- Test an authenticated API call from the frontend; verify the Authorization: Bearer <token> header is accepted
 
 Operations basics
 
@@ -126,6 +142,7 @@ Notes
 
 - Keep costs low by using free tiers and minimizing egress. R2 plus Cloudflare CDN reduces egress for images
 - If cold starts are noticeable, consider Cloud Run min instances = 1 (small cost) or add Cloudflare cache rules
+- API caching in CDN/proxy for read endpoints is a later, manual switch after initial DNS-only cutover
 - **Netlify sites**: Continue to work normally with Cloudflare DNS. You can gradually enable Cloudflare proxy features (orange cloud) for performance benefits, but test carefully
 - **Rollback plan**: If issues arise, you can quickly change nameservers back to Netlify DNS, though propagation takes time
 

@@ -1,6 +1,6 @@
 # Tracktory System Design
 
-_Last Updated: September 3, 2025_
+_Last Updated: September 4, 2025_
 
 ## System Overview
 
@@ -36,8 +36,8 @@ graph TB
     end
 
     subgraph "CDN & Edge"
-        CDN[CloudFlare CDN]
-        Edge[Edge Functions]
+        CDN[Global CDN]
+        Edge[Edge Functions optional]
     end
 
     subgraph "Application Layer"
@@ -53,7 +53,7 @@ graph TB
     end
 
     subgraph "Infrastructure"
-        LB[Load Balancer]
+        Runtime[Serverless Container Runtime]
         Monitor[Monitoring]
         Backup[Backup System]
     end
@@ -61,8 +61,8 @@ graph TB
     Mobile --> PWA
     PWA --> CDN
     CDN --> Edge
-    Edge --> LB
-    LB --> API
+    Edge --> Runtime
+    Runtime --> API
     API --> AuthJS
     API --> DB
     API --> Cache
@@ -77,6 +77,17 @@ graph TB
     Backup --> DB
     Backup --> Storage
 ```
+
+### Reference deployment mapping (non-normative)
+
+This system design remains cloud-agnostic. For the current production deployment, components map as follows (see the Cloud Infrastructure Blueprint in [docs/infrastructure/architecture.md](../infrastructure/architecture.md)):
+
+- Managed frontend hosting → Vercel (Next.js)
+- Serverless container runtime → Google Cloud Run (Go API)
+- Managed PostgreSQL → Neon
+- Managed Redis (future) → Upstash
+- Object storage (S3-compatible) → Cloudflare R2
+- Global CDN/DNS → Cloudflare
 
 ---
 
@@ -167,7 +178,7 @@ app/
 graph TB
     subgraph "API Layer"
         Router[Gin Router]
-        Middleware[Auth Middleware]
+        Middleware[Auth & CORS Middleware]
         Handlers[Request Handlers]
     end
 
@@ -324,6 +335,12 @@ images/
     └── {user_id}/{item_id}/{image_id}_1600.webp
 ```
 
+#### Upload Strategy and Access Patterns
+
+- **Direct-to-Object-Storage Uploads**: The client obtains a short-lived, scoped upload token or presigned URL from the API, then uploads directly to object storage. This reduces API bandwidth/latency and aligns with CDN delivery.
+- **Server-side Post-Processing**: After upload, the API triggers synchronous processing in the Go API for MVP; consider asynchronous processing in future phases to improve throughput.
+- **Access Control**: Derived assets (thumbnails/resized renditions) are publicly readable via CDN for fast UI. Originals are private by default; owners can download via time-limited signed URLs issued by the API. Avoid embedding original URLs directly in the UI.
+
 ---
 
 ## API Design
@@ -378,7 +395,7 @@ graph TB
     subgraph "CDN Caching"
         Static[Static Assets]
         Images[Image Cache]
-        API[API Cache]
+        API[API Cache - read endpoints; optional]
     end
 
     subgraph "Server-Side Caching"
@@ -419,7 +436,7 @@ graph TB
 
 - **Static Assets**: Global distribution with edge caching
 - **Images**: Optimized delivery with format negotiation
-- **API Responses**: Regional caching for read-only endpoints
+- **API Responses**: Regional caching for read-only endpoints (enabled when API is placed behind CDN/proxy). Initial deployment runs DNS-only; switching to proxied caching is a manual operational step.
 
 **Redis Caching:**
 
@@ -454,9 +471,9 @@ graph TB
 graph TB
     subgraph "Authentication Flow"
         Login[User Login]
-        JWT[JWT Token]
+        JWT[JWT Auth.js]
         Refresh[Refresh Token]
-        Validate[Token Validation]
+        Validate[Token Validation in API]
     end
 
     subgraph "Authorization Layers"
@@ -467,7 +484,6 @@ graph TB
 
     subgraph "Security Features"
         RBAC[Role-Based Access]
-        Audit[Audit Logging]
         Encryption[Data Encryption]
     end
 
@@ -480,7 +496,6 @@ graph TB
     Resource --> Data
 
     RBAC --> Resource
-    Audit --> Data
     Encryption --> Data
 ```
 
@@ -488,18 +503,32 @@ graph TB
 
 **Authentication:**
 
-- **OAuth Providers**: Google and GitHub authentication via Auth.js (NextAuth.js)
-- **JWT Tokens**: Short-lived access tokens (15 minutes) for API access
-- **Refresh Tokens**: Long-lived refresh tokens (7 days) with rotation
-- **Secure Storage**: Auth.js handles secure session storage
-- **No Passwords**: OAuth-only authentication, no password storage
+- **OAuth Providers**: Google and GitHub authentication via Auth.js (NextAuth.js) on the frontend hosting platform.
+- **JWT Tokens**: Short-lived access tokens (≈15 minutes) issued by Auth.js for API access.
+- **Refresh Tokens**: Long-lived refresh tokens (≈7 days) with rotation, managed by Auth.js.
+- **API Verification**: The Go API validates Auth.js-issued JWTs via the configured signing key/secret or JWKS, and enforces scopes/claims per route.
+- **Secure Storage**: Auth.js handles secure session storage on the frontend; tokens are transmitted to the API over TLS only.
+- **No Passwords**: OAuth-only authentication, no password storage in the API.
+- **Token Transport**: The frontend sends the access token using the `Authorization: Bearer <token>` header on API requests (no cross-site cookies required).
+
+**Token signing strategy:**
+
+- MVP recommendation: Symmetric signing (HS256) with a shared secret between Auth.js and the Go API (for example, `AUTH_SECRET`/`NEXTAUTH_SECRET`). Keep tokens short-lived and rotate secrets periodically.
+- Future option: Asymmetric signing (RS256/ES256) with a published JWKS endpoint; the API verifies via JWKS, avoiding a shared symmetric secret.
 
 **Authorization:**
 
 - **Resource Ownership**: Users can only access their own data
 - **Household Permissions**: Role-based access for shared households
-- **API Rate Limiting**: Per-user request throttling
-- **Input Validation**: Comprehensive request validation
+- **API Rate Limiting**: Planned per-user throttling backed by managed Redis; disabled for MVP
+- **Input Validation**: Comprehensive request validation in handlers and schema validation in the API
+
+**CORS Policy (API):**
+
+- Allowed origins: `https://tracktory.tonyneuhold.com` and local development (e.g., `http://localhost:3000`).
+- Allowed methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+- Allowed headers: Authorization, Content-Type, X-Requested-With
+- Credentials: Not required (Authorization header is used); set `Access-Control-Allow-Credentials: false`.
 
 **Data Protection:**
 
@@ -512,77 +541,20 @@ graph TB
 
 ## Deployment Architecture
 
-### Infrastructure Overview
+### Deployment Strategy (cloud-agnostic)
 
-```mermaid
-graph TB
-    subgraph "Production Environment"
-        LB[Load Balancer]
-        API1[API Server 1]
-        API2[API Server 2]
-        DB[(Primary DB)]
-        Cache[(Redis)]
-        Storage[Object Storage]
-    end
+This section describes abstract runtime responsibilities without provider specifics. For concrete production mapping, see the Cloud Infrastructure Blueprint and Deployment Guide:
 
-    subgraph "CDN & Edge"
-        CDN[Global CDN]
-        Edge[Edge Functions]
-    end
+- [Cloud Infrastructure Blueprint](../infrastructure/architecture.md)
+- [Deployment Guide (Prod)](../infrastructure/deployment-guide.md)
+- [Runtime Packaging (implementation spec)](./implementation-specs/runtime-packaging.md)
 
-    subgraph "Monitoring"
-        Metrics[Metrics Collection]
-        Logs[Log Aggregation]
-    end
+Core responsibilities:
 
-    subgraph "CI/CD"
-        Git[Git Repository]
-        Build[Build Pipeline]
-        Deploy[Deployment]
-    end
-
-    CDN --> LB
-    LB --> API1
-    LB --> API2
-    API1 --> DB
-    API2 --> DB
-    API1 --> Cache
-    API2 --> Cache
-    API1 --> Storage
-    API2 --> Storage
-
-    Storage --> CDN
-
-    API1 --> Metrics
-    API2 --> Logs
-
-    Git --> Build
-    Build --> Deploy
-    Deploy --> LB
-```
-
-#### Deployment Strategy
-
-**Container Architecture:**
-
-```dockerfile
-# Multi-stage build for minimal production image
-FROM node:18-alpine AS frontend-builder
-FROM golang:1.21-alpine AS backend-builder
-FROM alpine:latest AS runtime
-```
-
-**Environment Management:**
-
-- **Development**: Local Docker Compose environment
-- **Production**: Managed Kubernetes with auto-scaling
-
-**CI/CD Pipeline:**
-
-1. **Code Push**: Trigger on main branch changes
-2. **Testing**: Unit tests, integration tests, security scans
-3. **Building**: Docker image creation and optimization
-4. **Deployment**: Blue-green deployment with health checks
+- Frontend hosting builds and serves the Next.js app with global CDN.
+- API runtime executes the Go service with autoscaling and health-checked rollouts.
+- CI/CD runs tests and deploys both frontend and API; secrets are managed in environment/repo scopes.
+- DNS/CDN route traffic to frontend and API; API proxy/caching for read endpoints can be enabled later as usage grows (manual switch).
 
 ---
 
@@ -679,7 +651,8 @@ graph TB
 **Scaling Considerations:**
 
 - **CDN Expansion**: Global content delivery optimization
-- **Caching Layers**: Additional caching tiers for scale
+- **Caching Layers**: Additional caching tiers for scale; enable CDN/proxy in front of API read endpoints when usage warrants it
+- **Service Decomposition**: If needed, move from single serverless API to multiple services or managed Kubernetes
 
 ---
 

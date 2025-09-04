@@ -4,6 +4,11 @@ Last Updated: 2025-09-03
 
 Scope: Production-only, hobby-scale (1–2 users), <$50/month target. Simple, low-ops stack with room to grow.
 
+Related architecture docs:
+
+- [System Design (cloud-agnostic)](../architecture/system-design.md)
+- [Runtime Packaging (implementation spec)](../architecture/implementation-specs/runtime-packaging.md)
+
 Chosen Stack
 
 - Frontend: Vercel (Next.js PWA)
@@ -43,7 +48,7 @@ flowchart TB
 
     Browser --> CF_CDN --> Vercel
     Browser --> CF_DNS
-    Browser -->|api.yourdomain.com| CloudRun
+    Browser -->|api.tracktory.tonyneuhold.com| CloudRun
     CloudRun --> Neon
     CloudRun --> Upstash
     CloudRun --> R2
@@ -72,7 +77,7 @@ Security (MVP posture)
 
 - TLS via Cloudflare/Vercel/Cloud Run managed certs.
 - GitHub Actions: repository/environment secrets (DB URL, Redis token, R2 credentials, API base URL).
-- Service account for Cloud Run deploy (rotate yearly; later: move to OIDC/WIF).
+- Service account for Cloud Run deploy
 - Principle of least privilege on Cloudflare API token (DNS edit + R2 access only).
 
 Cost Notes (hobby)
