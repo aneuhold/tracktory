@@ -64,9 +64,9 @@ SLO Targets (initial)
 Networking & DNS
 
 - Root and subdomains managed in Cloudflare.
-- Frontend: yourdomain.com (proxied through Cloudflare to Vercel).
-- API: api.yourdomain.com (CNAME to Cloud Run domain, start as non-proxied “DNS only” for simplicity; can add Cloudflare proxy later).
-- Images: cdn.yourdomain.com for R2 public access (via R2 custom domain or Worker; start with signed URLs if preferred).
+- Frontend: `tracktory.tonyneuhold.com` (proxied through Cloudflare to Vercel).
+- API: `api.tracktory.tonyneuhold.com` (CNAME to Cloud Run domain, start as non-proxied “DNS only” for simplicity; can add Cloudflare proxy later).
+- Images: `cdn.tracktory.tonyneuhold.com` for R2 public access (via R2 custom domain or Worker; start with signed URLs if preferred).
 
 Security (MVP posture)
 
