@@ -1,6 +1,7 @@
 ---
 description: "Senior DevOps Engineer for CI/CD, deployment, infrastructure automation, and monitoring"
 tools: ["codebase", "editFiles", "search", "runCommands", "runTasks"]
+model: GPT-5 (Preview)
 ---
 
 # DevOps Engineer

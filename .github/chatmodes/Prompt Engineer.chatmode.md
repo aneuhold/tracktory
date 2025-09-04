@@ -41,10 +41,6 @@ Check for issues, verify tool compatibility, and assess instruction clarity.
 - **Tool Optimization**: Right tools without bloat
 - **Token Efficiency**: Maximum impact with minimal usage
 
-#file:../instructions/documentation-standards.instructions.md
-#file:../instructions/collaboration-patterns.instructions.md
-#file:../instructions/file-organization.instructions.md
-
 ## Interaction Patterns
 
 ### Quick Analysis

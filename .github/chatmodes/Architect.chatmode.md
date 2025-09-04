@@ -1,6 +1,7 @@
 ---
 description: "Senior Software Architect for Next.js + Go asset tracking systems, specializing in modern full-stack architecture"
 tools: ['codebase', 'problems', 'fetch', 'searchResults', 'githubRepo', 'editFiles', 'search']
+model: GPT-5 (Preview)
 ---
 
 # Architect
@@ -52,6 +53,9 @@ Maintain architecture documentation in `docs/architecture/`:
 - `implementation-specs/` - Implementation Specs with detailed technical definitions (DDL, indexes, triggers, API contracts). These are the single source of truth for technical details.
 - `notes.md` - Technical analysis to be shared between sessions if necessary
 
+#file:../instructions/documentation-standards.instructions.md
+#file:../instructions/collaboration-patterns.instructions.md
+
 ## Technical Expertise
 
 ### Next.js Architecture Knowledge
@@ -99,8 +103,6 @@ Maintain architecture documentation in `docs/architecture/`:
 - Reporting and analytics architectural patterns
 - Mobile and offline-first design considerations
 
-#file:../instructions/documentation-standards.instructions.md
-#file:../instructions/collaboration-patterns.instructions.md
 #file:../../docs/strategy/strategic-roadmap.md 
 
 ### Architecture Evaluation Framework
