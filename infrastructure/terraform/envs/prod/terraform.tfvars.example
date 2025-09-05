@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and fill values
+
+zone_name            = "example.com"
+
+# Frontend (Vercel) DNS
+frontend_record_name = "@"                      # or "app"
+frontend_target      = "cname.vercel-dns.com"   # replace with Vercel-provided target
+frontend_proxied     = true
+
+# API (Cloud Run) DNS
+api_record_name = "api"
+api_target      = "api-xxxx-uw.a.run.app"      # replace with your Cloud Run hostname
+api_proxied     = false                         # start DNS only; proxy later if desired
+
+# Cloudflare auth (optional if using CLOUDFLARE_API_TOKEN env var)
+cloudflare_api_token = ""
+
+# R2 (optional, if enabling module)
+cloudflare_account_id = ""
+r2_bucket_name        = "tracktory-images"
