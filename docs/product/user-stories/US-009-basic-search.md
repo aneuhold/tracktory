@@ -1,4 +1,4 @@
-# US-006: Basic Search
+# US-009: Basic Search
 
 **As a** user with multiple items  
 **I want** to search for specific items by name  
@@ -30,6 +30,14 @@
 - [ ] Efficient client-side filtering for small collections
 - [ ] Server-side search for large collections
 
+## Technical Implementation
+
+- **Architecture Decision**: PostgreSQL FTS per [ADR-005: Search Architecture](../../architecture/technical-decisions/adr-005-search-architecture.md)
+- **Implementation Details**: Search queries in [search implementation spec](../../architecture/implementation-specs/search.md)
+- **API Contracts**: Search endpoints in [API specification](../../architecture/implementation-specs/api-specification.md#search)
+- **Database Schema**: Search vector setup in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+- **Offline Support**: Client filtering per [offline support spec](../../architecture/implementation-specs/offline-support.md)
+
 ## Technical Notes
 
 - PostgreSQL full-text search for server-side queries
@@ -41,5 +49,5 @@
 - **Status**: Ready
 - **Priority**: Medium
 - **Estimate**: 5 points
-- **Dependencies**: US-004 (item list to search within)
+- **Dependencies**: US-007 (item list to search within)
 - **API Endpoints**: `GET /search`

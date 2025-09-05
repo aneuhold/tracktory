@@ -1,4 +1,4 @@
-# US-002: Create New Item
+# US-006: Create New Item
 
 **As a** logged-in user  
 **I want** to quickly add a new item to my inventory  
@@ -26,6 +26,14 @@
 - [ ] Network errors queue item for offline sync
 - [ ] Large image files are rejected with helpful message
 
+## Technical Implementation
+
+- **API Contracts**: Item endpoints in [API specification](../../architecture/implementation-specs/api-specification.md#items)
+- **Database Schema**: Items table in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+- **Image Processing**: Pipeline per [image processing spec](../../architecture/implementation-specs/image-processing.md)
+- **Architecture Decision**: Image storage per [ADR-002: Image Storage](../../architecture/technical-decisions/adr-002-image-storage.md)
+- **Offline Support**: Sync queue per [offline support spec](../../architecture/implementation-specs/offline-support.md)
+
 ## Technical Notes
 
 - Mobile-first form design with touch-optimized inputs
@@ -38,5 +46,5 @@
 - **Status**: Ready
 - **Priority**: High
 - **Estimate**: 8 points
-- **Dependencies**: US-001 (authentication), US-003 (categories)
+- **Dependencies**: US-004 (authentication), US-005 (categories)
 - **API Endpoints**: `POST /items`, `POST /items/{id}/images`

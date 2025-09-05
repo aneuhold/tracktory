@@ -1,4 +1,4 @@
-# US-003: Default Categories
+# US-005: Default Categories
 
 **As a** new user  
 **I want** to see pre-defined categories for my items  
@@ -26,6 +26,11 @@
 9. **Tools** - Hand tools, power tools, hardware
 10. **Other** - Items that don't fit other categories
 
+## Technical Implementation
+
+- **API Contracts**: Categories endpoints in [API specification](../../architecture/implementation-specs/api-specification.md#categories)
+- **Database Schema**: Categories table in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+
 ## Technical Notes
 
 - Categories seeded during database initialization
@@ -37,5 +42,5 @@
 - **Status**: Ready
 - **Priority**: Medium
 - **Estimate**: 3 points
-- **Dependencies**: None (can use database seeds)
+- **Dependencies**: US-002 (database for seeding)
 - **API Endpoints**: `GET /categories`

@@ -1,4 +1,4 @@
-# US-001: User Authentication
+# US-004: User Authentication
 
 **As a** new user  
 **I want** to create an account and log in securely  
@@ -15,6 +15,13 @@
 - [ ] User profile shows basic info (name, email, avatar from OAuth provider)
 - [ ] No password storage or management required
 
+## Technical Implementation
+
+- **Architecture Decision**: OAuth-only approach per [ADR-003: Authentication](../../architecture/technical-decisions/adr-003-authentication.md)
+- **Implementation Details**: Auth.js setup and Go middleware in [authentication spec](../../architecture/implementation-specs/authentication.md)
+- **API Contracts**: Auth endpoints in [API specification](../../architecture/implementation-specs/api-specification.md#authentication)
+- **Database Schema**: User table in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+
 ## Technical Notes
 
 - Uses Auth.js (NextAuth.js) for OAuth flows
@@ -27,5 +34,5 @@
 - **Status**: Ready
 - **Priority**: High
 - **Estimate**: 5 points
-- **Dependencies**: None (foundational)
+- **Dependencies**: US-002 (database setup)
 - **API Endpoints**: `/auth/oauth/google`, `/auth/oauth/github`, `/auth/user`

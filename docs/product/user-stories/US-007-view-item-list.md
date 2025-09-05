@@ -1,4 +1,4 @@
-# US-004: View Item List
+# US-007: View Item List
 
 **As a** user with tracked items  
 **I want** to see an overview of all my belongings  
@@ -29,6 +29,13 @@
 - **No search results**: "No items found. Try different search terms."
 - **Loading**: Skeleton grid showing placeholder cards
 
+## Technical Implementation
+
+- **API Contracts**: Item listing in [API specification](../../architecture/implementation-specs/api-specification.md#items)
+- **Database Schema**: Items queries in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+- **Image Delivery**: CDN strategy per [image processing spec](../../architecture/implementation-specs/image-processing.md)
+- **Offline Support**: Cached browsing per [offline support spec](../../architecture/implementation-specs/offline-support.md)
+
 ## Technical Notes
 
 - Virtual scrolling for performance with large collections
@@ -40,5 +47,5 @@
 - **Status**: Ready
 - **Priority**: High
 - **Estimate**: 5 points
-- **Dependencies**: US-002 (items must exist to display)
+- **Dependencies**: US-006 (items must exist to display)
 - **API Endpoints**: `GET /items`

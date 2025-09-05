@@ -1,4 +1,4 @@
-# US-005: View Item Details
+# US-008: View Item Details
 
 **As a** user  
 **I want** to see full details of a specific item  
@@ -31,6 +31,13 @@
 - [ ] Smooth transitions between views
 - [ ] Readable text at mobile sizes
 
+## Technical Implementation
+
+- **API Contracts**: Item detail endpoint in [API specification](../../architecture/implementation-specs/api-specification.md#items)
+- **Database Schema**: Item queries in [database schema spec](../../architecture/implementation-specs/database-schema.md)
+- **Image Delivery**: Progressive loading per [image processing spec](../../architecture/implementation-specs/image-processing.md)
+- **Architecture Decision**: Image formats per [ADR-002: Image Storage](../../architecture/technical-decisions/adr-002-image-storage.md)
+
 ## Technical Notes
 
 - Progressive image loading (WebP/AVIF with JPEG fallback)
@@ -42,5 +49,5 @@
 - **Status**: Ready
 - **Priority**: High
 - **Estimate**: 5 points
-- **Dependencies**: US-002 (items), US-004 (navigation from list)
+- **Dependencies**: US-006 (items), US-007 (navigation from list)
 - **API Endpoints**: `GET /items/{id}`, `GET /images/{id}`

@@ -1,4 +1,4 @@
-# US-007: Offline Support
+# US-011: Offline Support
 
 **As a** mobile user  
 **I want** the app to work without internet connection  
@@ -37,6 +37,12 @@
 - [ ] User notification when conflicts detected
 - [ ] Option to keep both versions for complex conflicts
 
+## Technical Implementation
+
+- **Architecture Decision**: Offline-first strategy per [ADR-006: Offline Support](../../architecture/technical-decisions/adr-006-offline-support.md)
+- **Implementation Details**: Complete offline system in [offline support spec](../../architecture/implementation-specs/offline-support.md)
+- **API Integration**: Idempotency support per [API specification](../../architecture/implementation-specs/api-specification.md)
+
 ## Technical Notes
 
 - Service Worker for app shell caching
@@ -49,5 +55,5 @@
 - **Status**: Ready
 - **Priority**: High (core mobile requirement)
 - **Estimate**: 8 points
-- **Dependencies**: US-002 (item creation), US-004 (item viewing)
+- **Dependencies**: US-006 (item creation), US-007 (item viewing)
 - **API Endpoints**: All endpoints with offline queue support
