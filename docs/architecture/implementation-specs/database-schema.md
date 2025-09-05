@@ -259,22 +259,54 @@ CREATE TRIGGER item_search_vector_update
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY items_user_policy ON items
-    FOR ALL TO authenticated_users
-    USING (user_id = current_user_id());
+    FOR ALL
+    USING (user_id = current_setting('app.user_id', true)::uuid);
 
-CREATE POLICY items_household_policy ON items
-    FOR ALL TO authenticated_users
-    USING (
-        household_id IN (
-            SELECT household_id
-            FROM household_members
-            WHERE user_id = current_user_id()
-        )
-    );
+-- MVP: keep household policies simple or omit until household features ship
+-- CREATE POLICY items_household_policy ... (enable when households are active)
 ```
+
+Application context:
+
+- The API must set `SET LOCAL app.user_id = '<uuid>'` per request/transaction after validating JWT. This ensures RLS predicates evaluate correctly without manually adding `user_id = $1` to every query. Use a connection-local setting within a transaction to avoid leakage across pooled connections.
 
 ## Notes
 
 - This document is referenced by [system-design.md](../system-design.md) and ADRs (e.g., [ADR-004](../technical-decisions/adr-004-database-design.md)).
 - Update this file first when making schema changes.
 - Keep diagrams in sync with table definitions.
+
+## Seed Data (Default Categories)
+
+Deterministic seed using fixed UUIDs to allow idempotent re-runs.
+
+```sql
+-- Example UUIDs; replace with generated constants for your environment
+INSERT INTO categories (id, name, sort_order)
+VALUES
+    ('11111111-1111-1111-1111-111111111111', 'Automotive', 0),
+    ('22222222-2222-2222-2222-222222222222', 'Books', 0),
+    ('33333333-3333-3333-3333-333333333333', 'Clothing', 0),
+    ('44444444-4444-4444-4444-444444444444', 'Electronics', 0),
+    ('55555555-5555-5555-5555-555555555555', 'Furniture', 0),
+    ('66666666-6666-6666-6666-666666666666', 'Garden', 0),
+    ('77777777-7777-7777-7777-777777777777', 'Kitchen', 0),
+    ('88888888-8888-8888-8888-888888888888', 'Sports', 0),
+    ('99999999-9999-9999-9999-999999999999', 'Tools', 0),
+    ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Other', 0)
+ON CONFLICT (id) DO NOTHING;
+```
+
+## Idempotency Support (Server-Side)
+
+```sql
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+    key TEXT PRIMARY KEY,
+    request_hash TEXT NOT NULL,
+    response_code INT NOT NULL,
+    response_body JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_idem_created ON idempotency_keys (created_at);
+```

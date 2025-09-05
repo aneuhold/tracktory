@@ -8,6 +8,34 @@ Authoritative implementation details for authentication. Decisions are in [ADR-0
 - Backend: Go API validates internal JWTs
 - Tokens: Short-lived access tokens (15m), refresh rotation (7d)
 
+## JWT Contract (MVP)
+
+- Algorithm: HS256 (symmetric). Shared secret between Auth.js and Go API
+- Issuer (iss): `tracktory-auth`
+- Audience (aud): `tracktory-api`
+- Clock skew tolerance: ±60s
+- Access token lifetime: 15 minutes; refresh handled by Auth.js session rotation (7 days)
+
+Claims (example):
+
+```json
+{
+  "iss": "tracktory-auth",
+  "aud": "tracktory-api",
+  "sub": "<user-uuid>",
+  "user_id": "<user-uuid>",
+  "email": "user@example.com",
+  "iat": 1693843200,
+  "exp": 1693844100
+}
+```
+
+Notes:
+
+- `sub` and `user_id` are both set to the UUID for convenience
+- No roles/scopes in MVP; authorization is resource ownership + RLS
+- Future: move to RS256/ES256 with JWKS (no shared secret). Document JWKS URL and key rotation in ADR when adopted
+
 ## Next.js (Auth.js) Setup
 
 ```typescript
@@ -27,6 +55,8 @@ const handler = NextAuth({
       clientSecret: process.env.GITHUB_SECRET!,
     }),
   ],
+  // MVP: issue HS256 tokens using NEXTAUTH_SECRET as signing key
+  // Keep tokens short-lived; rotate NEXTAUTH_SECRET on a schedule
   callbacks: {
     async signIn({ user, account }) {
       const res = await fetch(`${process.env.API_URL}/auth/oauth-callback`, {
@@ -125,7 +155,7 @@ func (s *AuthService) JWTMiddleware() gin.HandlerFunc {
             return
         }
 
-        claims, err := s.jwt.ValidateToken(token)
+    claims, err := s.jwt.ValidateToken(token)
         if err != nil {
             c.JSON(401, gin.H{"error": "Invalid token"})
             c.Abort()
@@ -148,6 +178,31 @@ type TracktoryJWTClaims struct {
 }
 ```
 
+### Token Verification (Go) — HS256
+
+```go
+type JWTManager struct {
+  secret []byte
+}
+
+func NewJWTManager(secret string) *JWTManager { return &JWTManager{secret: []byte(secret)} }
+
+func (j *JWTManager) ValidateToken(raw string) (*TracktoryJWTClaims, error) {
+  token, err := jwt.ParseWithClaims(raw, &TracktoryJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+    if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+      return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])}
+    return j.secret, nil
+  })
+  if err != nil || !token.Valid { return nil, fmt.Errorf("invalid token: %w", err) }
+
+  claims := token.Claims.(*TracktoryJWTClaims)
+  if claims.Issuer != "tracktory-auth" || !claims.VerifyAudience("tracktory-api", true) {
+    return nil, fmt.Errorf("invalid iss/aud")
+  }
+  return claims, nil
+}
+```
+
 ## Environment Variables
 
 ```bash
@@ -166,3 +221,10 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/tracktory
 
 - Database user table DDL is in the [database schema spec](./database-schema.md) (OAuth-only).
 - Endpoint contracts live in the [API specification](./api-specification.md).
+
+## CORS Policy (API)
+
+- Allowed origins: `https://tracktory.tonyneuhold.com`, `http://localhost:3000`
+- Allowed methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+- Allowed headers: Authorization, Content-Type, Idempotency-Key
+- Credentials: not required (use Bearer tokens)

@@ -148,9 +148,9 @@ self.addEventListener("fetch", (event) => {
 
 1. Detect connectivity changes (`online`/`offline` events)
 2. When online, process `offlineQueue` in FIFO order
-3. Send requests with `Idempotency-Key` header
+3. Send requests with `Idempotency-Key` header (UUID v4). Persist the key alongside action in IndexedDB
 4. Handle 409 CONFLICT by triggering conflict resolution
-5. On transient errors, retry with exponential backoff (e.g., 1s, 2s, 4s, 8s)
+5. On transient errors, retry with exponential backoff (e.g., 1s, 2s, 4s, 8s), jitter ±20%, max 5 attempts, then surface to UI
 6. Mark entries as `synced` on success and persist state
 
 ## Conflict Detection & Resolution
@@ -186,12 +186,13 @@ interface ConflictData<T = any> {
 ## Background Sync (Optional)
 
 - Use Background Sync / Periodic Background Sync (where supported) to resume `offlineQueue` processing
+- iOS PWA limitation: Background Sync is unreliable. Provide a visible "Sync now" action and run sync on app foreground/resume events
 - Fallback: schedule retries via `setTimeout` while app is open
 
 ## Security Considerations
 
 - Never cache sensitive API responses in SW unless encrypted or public
-- Validate JWT expiry before sending queued requests; refresh tokens proactively
+- Validate JWT expiry before sending queued requests; refresh tokens proactively. If refresh fails, pause queue and prompt re-auth
 - Respect per-user/household isolation; include user scoping in cache keys
 
 ## Testing Matrix

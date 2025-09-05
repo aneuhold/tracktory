@@ -79,3 +79,50 @@ func (s *SearchService) SearchItems(userID string, req SearchRequest) (*SearchRe
 
 - Keep SQL in sync with the [database schema spec](./database-schema.md).
 - Endpoint payloads live in the [API specification](./api-specification.md).
+
+## Query Behavior & UX Contracts
+
+- Minimum query length: 2 characters; shorter queries return empty result quickly
+- Debounce: 200–300ms client-side
+- Cursor pagination preferred; see API spec for `cursor`/`nextCursor`
+
+## Highlighting
+
+Server may return HTML-escaped snippets with `<em>` around matches. Example shape:
+
+```json
+{
+  "id": "uuid",
+  "name": "Drill",
+  "score": 0.87,
+  "highlights": {
+    "name": "<em>Drill</em>",
+    "description": "Cordless <em>drill</em> with case"
+  }
+}
+```
+
+Implementation options:
+
+- Use `ts_headline` for snippets:
+
+```sql
+ts_headline('english', name, plainto_tsquery($2), 'StartSel=<em>,StopSel=</em>')
+```
+
+## Prefix & Fuzzy Matching
+
+- For partial word matching like "dri" → "drill", consider:
+  - `plainto_tsquery($q || ':*')` for prefix matches
+  - `pg_trgm` similarity for fuzzy matches with a threshold (e.g., 0.3–0.5)
+- Trade-off: prefix/tri-gram can increase CPU; enable selectively when `length(q) >= 3`
+
+Example hybrid WHERE clause:
+
+```sql
+WHERE user_id = $1 AND (
+    search_vector @@ plainto_tsquery($2) OR
+    search_vector @@ to_tsquery($3) OR
+    (length($4) >= 3 AND similarity(name, $4) > 0.35)
+)
+```

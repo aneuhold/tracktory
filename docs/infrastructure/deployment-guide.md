@@ -120,6 +120,20 @@ Step 7 - CI/CD
   - Store GCP service account credentials as a secret (for example, GCP_SA_KEY) for MVP; consider OIDC/WIF later
   - Store DATABASE_URL, JWT_SECRET (matches NEXTAUTH_SECRET), R2 credentials, and any ALLOWED_ORIGINS in environment or repo secrets
 
+Migrations orchestration:
+
+- Build a small `cmd/migrate` tool (golang-migrate or goose) into the image or as a separate artifact
+- Deploy flow (recommended):
+  1. Run migrations against the target database in a dedicated CI job (with advisory lock)
+  2. If migrations succeed, deploy new API revision
+  3. Health check new revision; if failing, rollback API to previous revision; evaluate down-migrations only if safe
+- Prefer additive, backward-compatible migrations to support deploy-then-migrate when necessary
+
+Rollback strategy:
+
+- API: revert to previous Cloud Run revision
+- DB: avoid destructive down migrations; for breaking issues, apply corrective forward migration
+
 Step 8 - Smoke test
 
 - Visit https://yourdomain.com and basic app routes
@@ -137,6 +151,12 @@ Env var checklist (sample)
 
 - API (Cloud Run): DATABASE_URL, REDIS_URL or UPSTASH_REST_URL and UPSTASH_REST_TOKEN, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, JWT_SECRET, BASE_URL
 - Frontend (Vercel): NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_IMAGE_BASE
+
+Environment secrets matrix (example)
+
+- Development: Local `.env`, Docker Compose; low-scope test keys
+- CI: GitHub Environments "staging"/"production" with protected secrets
+- Production (Cloud Run): Env vars set per service; limit IAM on service account to least privilege
 
 Notes
 

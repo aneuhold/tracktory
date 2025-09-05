@@ -43,6 +43,17 @@ Notes:
 - Required envs (examples): `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_IMAGE_BASE`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`.
 - Do not store secrets in `NEXT_PUBLIC_*`.
 
+### PWA & Service Worker Strategy
+
+- Choose: `next-pwa` plugin (simple) or custom SW; MVP may start with simple custom SW to control caching precisely
+- Precache: app shell routes, offline.html, critical CSS/JS with revisioned filenames
+- Runtime caching:
+  - API GET: stale-while-revalidate with 5m max-age; bypass for POST/PUT/PATCH/DELETE
+  - Images: cache-first with immutable URLs; respect `Cache-Control`
+  - Fonts: cache-first with long max-age
+- Versioning: bump cache name/version on deploy to avoid stale assets
+- iOS caveat: Background sync unreliable; run sync on foreground
+
 ## Security & Secrets
 
 - JWT signing (MVP): HS256 shared secret across frontend auth and API (`NEXTAUTH_SECRET` = `JWT_SECRET`).

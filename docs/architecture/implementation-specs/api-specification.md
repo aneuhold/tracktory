@@ -12,9 +12,10 @@ This document is the single source of truth for API contracts. System design and
 - IDs are UUIDv4 strings
 - Times are ISO-8601 UTC strings, e.g., `2025-09-03T10:00:00Z`
 - Request/response fields use `camelCase`
-- Pagination: offset-based with `page` (1-based) and `limit` (default 20, max 100)
+- Pagination: cursor-based with `cursor` (opaque, optional) and `limit` (default 20, max 100). Responses include `nextCursor` when more results exist
 - Sorting: `sortBy` and `sortDir` (asc|desc)
 - Idempotency: Supported for create/update via `Idempotency-Key` header (recommended for offline sync)
+- CORS: Allowed origins `https://tracktory.tonyneuhold.com` and `http://localhost:3000`. Allowed headers: Authorization, Content-Type, Idempotency-Key. Credentials: false
 
 ## Standard Responses
 
@@ -28,9 +29,8 @@ Success:
     "timestamp": "2025-09-03T10:00:00Z",
     "version": "1.0",
     "pagination": {
-      "page": 1,
       "limit": 20,
-      "total": 150,
+      "nextCursor": "eyJjdHgiOiJpdGVtXzEyMyJ9",
       "hasMore": true
     }
   }
@@ -61,6 +61,13 @@ Common Error Codes: `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `RATE_LIMITED`, `V
 
 Rate Limiting: Responses may include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
+Idempotency:
+
+- Header: `Idempotency-Key: <uuid>` on POST/PUT/PATCH for operations that the client may retry
+- Server guarantees that retried requests with the same key and same route/body are deduplicated within a 24h window
+- On replay, server returns the original status code (201/200) and sets header `Idempotency-Replayed: true`
+- Storage: Server persists keys to an `idempotency_keys` table (or cache+DB) with request hash and response reference
+
 ## Authentication
 
 Auth is handled via Auth.js on the frontend. The API accepts JWTs. Some auth-related endpoints are exposed for integration.
@@ -74,6 +81,7 @@ POST   /auth/oauth/callback         # OAuth callback processing (Auth.js route)
 POST   /auth/refresh                # Refresh API token
 POST   /auth/logout                 # Logout current session
 GET    /auth/user                   # Current user info
+GET    /auth/jwks                   # (Future) JWKS endpoint when asymmetric signing is adopted
 ```
 
 Current user response:
@@ -127,18 +135,20 @@ Schema (response):
 Endpoints:
 
 ```
-GET    /items                         # List items (filters supported)
+GET    /items                         # List items (filters supported; cursor pagination)
 POST   /items                         # Create item
 GET    /items/{id}                    # Get item
 PUT    /items/{id}                    # Update item (full)
 PATCH  /items/{id}                    # Update item (partial)
 DELETE /items/{id}                    # Delete item
-POST   /items/{id}/images             # Upload image (multipart/form-data)
+POST   /items/{id}/images             # Upload image (multipart/form-data) — direct upload fallback
+POST   /items/{id}/images/sign        # Get presigned upload URL/fields (preferred)
+POST   /items/{id}/images/confirm     # Confirm upload and trigger processing
 ```
 
 List filters (query params):
 
-- `page`, `limit`
+- `cursor`, `limit`
 - `q` (search), `categoryId`, `locationId`, `status[]`, `condition[]`
 - `sortBy` (createdAt|updatedAt|name), `sortDir` (asc|desc)
 
@@ -162,34 +172,102 @@ Image upload (multipart):
 - `file`: image file
 - Optional: `altText`, `tags[]`
 
-## Search
+Signed upload (preferred):
 
-Endpoints:
+Request:
 
 ```
-GET    /search                        # Full-text search over items
-GET    /search/suggestions            # Autocomplete suggestions
-GET    /search/filters                # Available filters (categories, locations)
+POST /items/{id}/images/sign
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "contentType": "image/jpeg",
+  "fileName": "IMG_1234.jpg",
+  "size": 3456789
+}
 ```
 
-`GET /search` query params:
-
-- `q` (string), `page`, `limit`, `categoryId`, `locationId`, `status[]`, `condition[]`
-
-Response (items array with ranking):
+Response:
 
 ```json
 {
   "success": true,
   "data": {
-    "items": [{ "id": "uuid", "name": "Drill", "score": 0.87 }]
+    "uploadUrl": "https://r2.example.com/tracktory/images/originals/...",
+    "fields": { "x-amz-date": "..." },
+    "objectKey": "images/originals/{user_id}/{item_id}/{image_id}.jpg",
+    "maxSize": 10485760
+  },
+  "meta": { "timestamp": "2025-09-03T10:00:00Z" }
+}
+```
+
+Confirm (optional) after upload to create DB record and trigger processing:
+
+```
+POST /items/{id}/images/confirm
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "objectKey": "images/originals/{user_id}/{item_id}/{image_id}.jpg" }
+
+## Search
+## Search
+Endpoints:
+
+```
+
+GET /search # Full-text search over items
+GET /search/suggestions # Autocomplete suggestions
+GET /search/filters # Available filters (categories, locations)
+
+````
+
+`GET /search` query params:
+
+- `q` (string; min length 2)
+- `cursor`, `limit`
+- `categoryId`, `locationId`, `status[]`, `condition[]`
+
+Response (items array with ranking and optional highlights):
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "uuid",
+        "name": "Drill",
+        "score": 0.87,
+        "highlights": {
+          "name": "<em>Drill</em>",
+          "description": "Cordless <em>drill</em> with case"
+        }
+      }
+    ]
   },
   "meta": {
     "timestamp": "2025-09-03T10:00:00Z",
-    "pagination": { "page": 1, "limit": 20, "hasMore": false }
+    "pagination": { "limit": 20, "nextCursor": null, "hasMore": false }
   }
 }
-```
+````
+
+Highlighting:
+
+- Server may return HTML-escaped snippets with `<em>` tags around matches
+- Clients should render highlights safely (e.g., using a sanitizer)
+
+Constraints:
+
+- Minimum 2 characters required before executing server-side search
+- Debounce recommended at 200–300ms to limit requests
+
+Concurrency control and caching:
+
+- Responses include `ETag`; clients may send `If-None-Match` for conditional GETs
 
 ## Categories
 
@@ -257,6 +335,11 @@ Schema:
   "createdAt": "..."
 }
 ```
+
+ETags and Concurrency:
+
+- Mutating endpoints should return/accept `ETag` and `If-Match` headers to prevent lost updates
+- On mismatch, return `409 CONFLICT` with error code `CONFLICT`
 
 ## Households (Phase 3)
 
